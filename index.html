@@ -517,6 +517,30 @@
                 font-size: 0.8rem;
             }
         }
+        
+        /* Additional CSS for mobile devices to prevent scrolling issues */
+        @media (max-width: 767px) {
+            .download-btn, button {
+                -webkit-tap-highlight-color: transparent; /* Remove tap highlight on mobile */
+                touch-action: manipulation; /* Improve touch handling */
+                user-select: none; /* Prevent text selection */
+            }
+            
+            .share-btn {
+                -webkit-appearance: none;  /* Remove default styling on iOS */
+                position: relative; /* Needed for proper event handling */
+                z-index: 10; /* Ensure button is above other elements */
+            }
+            
+            /* Prevent focus outlines that can cause scrolling issues */
+            button:focus, 
+            input:focus, 
+            textarea:focus {
+                outline: none !important;
+            }
+        }
+        
+        /* Touch device specific styles */
     </style>
 </head>
 <body>
@@ -710,7 +734,7 @@
                             <i class="ph ph-image"></i> Download PNG
                         </button>
                     </div>
-                    <button id="share-qr" class="download-btn share-btn full-width" disabled>
+                    <button id="share-qr" class="download-btn share-btn full-width" type="button" disabled>
                         <i class="ph ph-share-network"></i> Share QR
                     </button>
                 </div>
@@ -908,10 +932,28 @@
                 
                 // Share button
                 var shareBtn = document.getElementById('share-qr');
-                shareBtn.addEventListener('click', shareQRCode);
-                shareBtn.addEventListener('touchend', function(e) {
-                    e.preventDefault();
+                shareBtn.addEventListener('click', function(event) {
+                    // Prevent default behavior to stop page scrolling
+                    event.preventDefault();
+                    event.stopPropagation();
+                    
+                    // Call share function
                     shareQRCode();
+                    
+                    // Return false to ensure no default behavior
+                    return false;
+                });
+                
+                shareBtn.addEventListener('touchend', function(e) {
+                    // Prevent all default behaviors
+                    e.preventDefault();
+                    e.stopPropagation();
+                    
+                    // Call share function
+                    shareQRCode();
+                    
+                    // Return false to ensure no default behavior
+                    return false;
                 });
                 
                 // Add touch feedback class for buttons
@@ -1737,6 +1779,11 @@
             
             // SHARE QR CODE
             function shareQRCode() {
+                // Blur any active element to prevent keyboard/focus issues
+                if (document.activeElement) {
+                    document.activeElement.blur();
+                }
+                
                 if (!QR.generated) {
                     showNotification("Please generate a QR code first");
                     return;
@@ -1753,10 +1800,17 @@
                 try {
                     console.log("--------- SHARE STARTED ---------");
                     console.log("OUTLINE ENABLED: " + QR.showOutline + " (Type: " + typeof QR.showOutline + ")");
+                    console.log("INVERTED: " + QR.invertColors + " (Type: " + typeof QR.invertColors + ")");
+                    
+                    // Show notification to indicate sharing is beginning
+                    showNotification("Preparing to share...");
                     
                     // If we already have a PNG blob from a previous download, use it
                     if (QR.pngBlob) {
-                        shareExistingQR();
+                        console.log("Using existing PNG blob for sharing");
+                        setTimeout(function() {
+                            shareExistingQR();
+                        }, 100); // Small delay to allow UI to update
                         return;
                     }
                     
@@ -1860,30 +1914,29 @@
                             // Create a shareable File object
                             var file = new File([blob], "qkqr-" + QR.type + ".png", { type: "image/png" });
                             
-                            // Share the file
-                            navigator.share({
-                                title: 'QR Code from QKQR',
-                                text: 'Check out this QR code I generated with QKQR!',
-                                files: [file]
-                            }).then(() => {
-                                console.log('QR code shared successfully!');
-                                showNotification("QR Code shared successfully!");
-                            }).catch((error) => {
-                                console.error('Share error:', error);
-                                showNotification("Error sharing: " + error.message);
-                                
-                                // If sharing files fails, try fallback without files
-                                if (error.name === 'NotAllowedError' || error.name === 'TypeError') {
-                                    navigator.share({
-                                        title: 'QR Code from QKQR',
-                                        text: 'Check out this QR code I generated with QKQR!',
-                                        url: window.location.href
-                                    }).catch((err) => {
-                                        console.error('Fallback share error:', err);
-                                        showNotification("Sharing not supported on this device");
-                                    });
-                                }
-                            });
+                            // Check if the browser supports sharing files
+                            var canShareFiles = navigator.canShare && navigator.canShare({ files: [file] });
+                            
+                            if (canShareFiles) {
+                                console.log("Device supports sharing files, attempting to share file...");
+                                // Share with file
+                                navigator.share({
+                                    title: 'QR Code from QKQR',
+                                    text: 'Check out this QR code I generated with QKQR!',
+                                    files: [file]
+                                }).then(() => {
+                                    console.log('QR code shared successfully with file!');
+                                    showNotification("QR Code shared successfully!");
+                                }).catch((error) => {
+                                    console.error('Share with file error:', error);
+                                    // Fall back to URL sharing
+                                    shareWithoutFile();
+                                });
+                            } else {
+                                // Share without file for browsers that don't support file sharing
+                                console.log("Device doesn't support sharing files, falling back to URL sharing");
+                                shareWithoutFile();
+                            }
                         }, 'image/png');
                     };
                     
@@ -1897,36 +1950,58 @@
 
             function shareExistingQR() {
                 try {
+                    console.log("Sharing existing QR image...");
+                    
                     // Create a shareable File object from the existing blob
                     var file = new File([QR.pngBlob], "qkqr-" + QR.type + ".png", { type: "image/png" });
                     
-                    // Share the file
-                    navigator.share({
-                        title: 'QR Code from QKQR',
-                        text: 'Check out this QR code I generated with QKQR!',
-                        files: [file]
-                    }).then(() => {
-                        console.log('QR code shared successfully!');
-                        showNotification("QR Code shared successfully!");
-                    }).catch((error) => {
-                        console.error('Share error:', error);
-                        showNotification("Error sharing: " + error.message);
-                        
-                        // If sharing files specifically fails, try without files (fallback)
-                        if (error.name === 'NotAllowedError' || error.name === 'TypeError') {
-                            navigator.share({
-                                title: 'QR Code from QKQR',
-                                text: 'Check out this QR code I generated with QKQR!',
-                                url: window.location.href
-                            }).catch((err) => {
-                                console.error('Fallback share error:', err);
-                                showNotification("Sharing not supported on this device");
-                            });
-                        }
-                    });
+                    // Check if the browser supports sharing files
+                    var canShareFiles = navigator.canShare && navigator.canShare({ files: [file] });
+                    
+                    if (canShareFiles) {
+                        console.log("Device supports sharing files, attempting to share file...");
+                        // Share with file
+                        navigator.share({
+                            title: 'QR Code from QKQR',
+                            text: 'Check out this QR code I generated with QKQR!',
+                            files: [file]
+                        }).then(() => {
+                            console.log('QR code shared successfully with file!');
+                            showNotification("QR Code shared successfully!");
+                        }).catch((error) => {
+                            console.error('Share with file error:', error);
+                            // Fall back to URL sharing
+                            shareWithoutFile();
+                        });
+                    } else {
+                        // Share without file for browsers that don't support file sharing
+                        console.log("Device doesn't support sharing files, falling back to URL sharing");
+                        shareWithoutFile();
+                    }
                 } catch (error) {
                     console.error("Share existing QR error:", error);
                     showNotification("Error: " + error.message);
+                    // Try fallback
+                    shareWithoutFile();
+                }
+            }
+            
+            function shareWithoutFile() {
+                try {
+                    navigator.share({
+                        title: 'QR Code from QKQR',
+                        text: 'Check out this QR code I generated with QKQR!',
+                        url: window.location.href
+                    }).then(() => {
+                        console.log('QR code URL shared successfully!');
+                        showNotification("QR Code URL shared successfully!");
+                    }).catch((err) => {
+                        console.error('URL share error:', err);
+                        showNotification("Sharing not supported on this device");
+                    });
+                } catch (error) {
+                    console.error("URL share error:", error);
+                    showNotification("Sharing not supported on this device");
                 }
             }
             
