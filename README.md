@@ -1,4 +1,4 @@
-# QKQR - Quick QR Code Generator
+# 🇶🇰🇶🇷  - Quick QR Code Generator
 
 QKQR is a fast, user-friendly QR code generator web application that allows users to create customizable QR codes for various purposes such as URLs, text, contact information, Wi-Fi credentials, and geographical locations.
 
