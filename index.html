@@ -1,0 +1,1947 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QKQR | Quick QR Code Generator</title>
+    <meta name="description" content="A fast and user-friendly QR code generator web application that allows users to create customizable QR codes for various purposes.">
+    
+    <link rel="icon" type="image/x-icon" href="/favicon/favicon.ico">
+    <link rel="apple-touch-icon" sizes="180x180" href="/favicon/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="/favicon/android-chrome-192x192.png">
+    <link rel="icon" type="image/png" sizes="512x512" href="/favicon/android-chrome-512x512.png">
+    <link rel="manifest" href="/favicon/site.webmanifest">
+    <meta name="theme-color" content="#fffff">
+
+    <!-- Open Graph Meta Tags -->
+    <meta property="og:title" content="QKQR | Quick QR Code Generator">
+    <meta property="og:description" content="A fast and user-friendly QR code generator web application that allows users to create customizable QR codes for various purposes.">
+    <meta property="og:image" content="https://i.ibb.co/FbK39VNb/og-image.jpg">
+    <meta property="og:url" content="https://saganaki22.github.io/QKQR/">
+    <meta property="og:type" content="website">
+    
+    <!-- Twitter Card Meta Tags -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="QKQR | Quick QR Code Generator">
+    <meta name="twitter:description" content="A fast and user-friendly QR code generator web application that allows users to create customizable QR codes for various purposes">
+    <meta name="twitter:image" content="https://i.ibb.co/FbK39VNb/og-image.jpg">
+
+    <!-- Load both fonts - Inter for UI and Press Start 2P for title -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap">
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <!-- Load the original QR code library first -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <!-- Add QR code SVG generator library with a unique variable name -->
+    <script>
+        // Create a variable to hold the original QRCode in case of conflicts
+        var OriginalQRCode = window.QRCode;
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/qrcode-svg@1.1.0/dist/qrcode.min.js"></script>
+    <script>
+        // Rename the SVG QRCode to avoid conflicts
+        var QRCodeSVG = window.QRCode;
+        // Restore the original QRCode
+        window.QRCode = OriginalQRCode;
+    </script>
+    <style>
+        /* Variables */
+        :root {
+            --orange: #FF5800;
+            --navy: #1B2D4F;
+            --dark-navy: #0C1C36;
+            --black: #000000;
+            --white: #FFFFFF;
+            --gray: #E0E0E0;
+            --dark-gray: #666666;
+        }
+        
+        /* Reset and base styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif; /* Default font for most elements */
+            -webkit-tap-highlight-color: transparent; /* Remove blue highlight on mobile taps */
+            -webkit-touch-callout: none; /* Prevent callout to copy image */
+            -webkit-user-select: none; /* Prevent text selection */
+            user-select: none; /* Prevent text selection */
+        }
+        
+        /* GitHub icon styles */
+        .github-icon {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            width: 40px;
+            height: 40px;
+            fill: var(--gray);
+            transition: transform 0.3s ease, fill 0.3s ease;
+            cursor: pointer;
+            z-index: 100;
+        }
+        
+        .github-icon:hover {
+            fill: var(--orange);
+            transform: rotate(360deg) scale(1.1);
+        }
+        
+        @media (max-width: 767px) {
+            .github-icon {
+                top: 15px;
+                right: 15px;
+                width: 32px;
+                height: 32px;
+            }
+        }
+        
+        /* Enable text selection only for input fields and text areas */
+        input, textarea {
+            -webkit-user-select: text;
+            user-select: text;
+        }
+        
+        body {
+            background-color: var(--navy);
+            color: var(--white);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+        
+        /* Header styles - Keep 8-bit font for logo and tagline */
+        header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        
+        .logo {
+            font-family: 'Press Start 2P', cursive; /* 8-bit font for logo */
+            color: var(--orange);
+            font-size: 2.5rem;
+            font-weight: 400;
+            margin-bottom: 1rem;
+            letter-spacing: -2px;
+            text-shadow: 4px 4px 0px var(--black);
+        }
+        
+        .tagline {
+            font-family: 'Press Start 2P', cursive; /* 8-bit font for tagline */
+            font-size: 0.8rem;
+            color: var(--gray);
+            letter-spacing: -1px;
+            line-height: 1.5;
+        }
+        
+        /* Main layout */
+        main {
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+            flex: 1;
+        }
+        
+        @media (min-width: 768px) {
+            main {
+                flex-direction: row;
+            }
+        }
+        
+        /* Options panel */
+        .qr-options {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            background-color: var(--dark-navy);
+            padding: 1.5rem;
+            border: none; /* Remove white border */
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+            border-radius: 10px; /* Restore rounded corners */
+        }
+        
+        /* Type selector */
+        .qr-type-selector {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+        
+        .type-btn {
+            background-color: var(--navy);
+            color: var(--white);
+            border: 1px solid var(--dark-gray);
+            box-shadow: 2px 2px 0 var(--black);
+            padding: 0.75rem 0.5rem;
+            border-radius: 8px; /* Restore rounded corners */
+            cursor: pointer;
+            transition: all 0.1s;
+            font-size: 0.8rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
+            min-width: 80px;
+        }
+        
+        .type-btn:hover {
+            background-color: var(--orange);
+        }
+        
+        .type-btn.active {
+            background-color: var(--orange);
+            font-weight: 600;
+        }
+        
+        /* Touch state styling for buttons */
+        .touch-active {
+            transform: scale(0.97);
+            opacity: 0.9;
+            transition: transform 0.1s, opacity 0.1s;
+        }
+        
+        .type-btn:active, #generate-btn:active, .download-btn:active, #geocode-btn:active {
+            transform: translate(1px, 1px);
+            box-shadow: 1px 1px 0 var(--black);
+            outline: none;
+            border-color: var(--dark-gray);
+        }
+        
+        .type-btn i {
+            font-size: 1.2rem;
+        }
+        
+        /* Input fields */
+        .input-fields {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        
+        .input-group {
+            display: none;
+        }
+        
+        .input-group.active {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        
+        label {
+            font-size: 0.85rem;
+            margin-bottom: 0.5rem;
+            display: block;
+            color: var(--gray);
+        }
+        
+        input, textarea, button, select {
+            font-family: 'Inter', sans-serif; /* Default font for form elements */
+            font-size: 0.85rem;
+            background-color: var(--navy);
+            border: 1px solid var(--dark-gray);
+            color: var(--white);
+            padding: 0.75rem;
+            border-radius: 6px; /* Restore rounded corners */
+        }
+        
+        input:focus, textarea:focus {
+            outline: none;
+            border-color: var(--orange);
+        }
+        
+        textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+        
+        /* Slider styling */
+        .slider-control {
+            margin-top: 1rem;
+        }
+        
+        .slider {
+            width: 100%;
+            height: 8px;
+            -webkit-appearance: none;
+            appearance: none;
+            background: var(--navy);
+            border: 1px solid var(--dark-gray);
+            border-radius: 4px; /* Restore rounded corners */
+            outline: none;
+            cursor: pointer;
+        }
+        
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            background: var(--orange);
+            border: 1px solid var(--dark-gray);
+            border-radius: 50%; /* Restore rounded corners */
+            cursor: pointer;
+        }
+        
+        /* Adjust spacing for normal font */
+        .slider-control label, 
+        .option-control label span,
+        .option-control p {
+            font-size: 0.85rem;
+            line-height: 1.5;
+        }
+        
+        /* Generate button */
+        #generate-btn {
+            background-color: var(--orange);
+            color: var(--white);
+            border: 1px solid var(--dark-gray);
+            box-shadow: 2px 2px 0 var(--black);
+            padding: 1rem;
+            border-radius: 8px; /* Restore rounded corners */
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            transition: all 0.1s;
+        }
+        
+        #generate-btn:hover {
+            background-color: #ff6a1f;
+        }
+        
+        /* QR result section */
+        .qr-result {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 2rem;
+            padding: 1.5rem;
+            background-color: var(--dark-navy);
+            border: none; /* Remove white border */
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+            border-radius: 10px; /* Restore rounded corners */
+        }
+        
+        .qr-preview {
+            width: 100%;
+            max-width: 300px;
+            height: 300px;
+            background-color: var(--dark-navy);
+            border: none; /* Remove white border */
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            padding: 0;
+            box-sizing: border-box;
+            overflow: visible; /* Allow stroke to extend outside container */
+            border-radius: 10px; /* Rounded corners for container only */
+        }
+        
+        /* QR code inner wrapper should have no border radius */
+        #qr-code {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: visible; /* Allow stroke to extend beyond */
+            border-radius: 0; /* No rounded corners for QR code */
+        }
+        
+        #qr-code-container {
+            border-radius: 0 !important; /* Ensure no rounded corners for QR */
+        }
+        
+        /* Download buttons */
+        .download-options {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            width: 100%;
+            max-width: 300px;
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 1rem;
+            width: 100%;
+        }
+        
+        .download-btn {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            background-color: var(--navy);
+            color: var(--white);
+            border: 1px solid var(--dark-gray);
+            box-shadow: 2px 2px 0 var(--black);
+            padding: 0.75rem;
+            border-radius: 8px; /* Restore rounded corners */
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.1s;
+        }
+        
+        .download-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .download-btn:not(:disabled):hover {
+            background-color: var(--orange);
+        }
+        
+        .download-btn i {
+            font-size: 1.2rem;
+        }
+        
+        .full-width {
+            width: 100%;
+        }
+        
+        .share-btn {
+            font-weight: 600;
+            background-color: var(--navy);
+            padding: 0.6rem;
+        }
+        
+        .share-btn:not(:disabled):hover {
+            background-color: #3b5998; /* Facebook blue color */
+        }
+        
+        /* Footer */
+        footer {
+            text-align: center;
+            margin-top: 2rem;
+            padding: 1rem;
+            color: var(--gray);
+            font-size: 0.75rem;
+        }
+        
+        /* Notification */
+        #notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background-color: var(--orange);
+            color: var(--white);
+            padding: 1rem;
+            border: none;
+            border-radius: 8px; /* Restore rounded corners */
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            display: none;
+            font-size: 0.85rem;
+        }
+        
+        /* Additional button for geocoding */
+        #geocode-btn {
+            background-color: var(--navy);
+            color: var(--white);
+            border: 1px solid var(--dark-gray);
+            box-shadow: 2px 2px 0 var(--black);
+            padding: 0.75rem;
+            border-radius: 8px; /* Restore rounded corners */
+            cursor: pointer;
+            transition: all 0.1s;
+            font-size: 0.85rem;
+        }
+        
+        #geocode-btn:hover {
+            background-color: var(--orange);
+        }
+        
+        /* Touch device specific styles */
+        .touch-device button {
+            padding: 0.8rem !important; /* Larger touch targets */
+            min-height: 44px; /* Apple recommendation for minimum touch target size */
+        }
+        
+        .touch-device .slider::-webkit-slider-thumb {
+            width: 24px;
+            height: 24px; /* Larger slider handle for touch */
+        }
+        
+        .touch-device input[type="checkbox"] {
+            transform: scale(1.2); /* Larger checkboxes */
+        }
+        
+        /* Responsive adjustments */
+        @media (max-width: 767px) {
+            .container {
+                padding: 1rem;
+            }
+            
+            .logo {
+                font-size: 2rem;
+            }
+            
+            .qr-type-selector {
+                justify-content: center;
+            }
+            
+            .type-btn {
+                min-width: 65px;
+                font-size: 0.75rem;
+                padding: 0.5rem 0.3rem;
+            }
+            
+            .qr-preview {
+                max-width: 230px;
+                height: 230px;
+                overflow: visible; /* Critical: Allow stroke to be visible */
+                padding: 0; /* Remove any padding that might clip the stroke */
+            }
+            
+            input, textarea, button, select {
+                font-size: 0.8rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- GitHub icon -->
+    <a href="https://github.com/Saganaki22/QKQR" target="_blank" rel="noopener noreferrer">
+        <svg class="github-icon" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+            <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/>
+        </svg>
+    </a>
+    <div class="container">
+        <header>
+            <h1 class="logo">QKQR</h1>
+            <p class="tagline">Quick & Stylish QR Codes</p>
+        </header>
+        
+        <main>
+            <div class="qr-options">
+                <div class="qr-type-selector">
+                    <button class="type-btn active" data-type="url">
+                        <i class="ph ph-link"></i>
+                        <span>URL</span>
+                    </button>
+                    <button class="type-btn" data-type="text">
+                        <i class="ph ph-note"></i>
+                        <span>Note</span>
+                    </button>
+                    <button class="type-btn" data-type="bitcoin">
+                        <i class="ph ph-currency-btc"></i>
+                        <span>Bitcoin</span>
+                    </button>
+                    <button class="type-btn" data-type="maps">
+                        <i class="ph ph-map-pin"></i>
+                        <span>Maps</span>
+                    </button>
+                    <button class="type-btn" data-type="email">
+                        <i class="ph ph-envelope"></i>
+                        <span>Email</span>
+                    </button>
+                    <button class="type-btn" data-type="vcard">
+                        <i class="ph ph-identification-card"></i>
+                        <span>vCard</span>
+                    </button>
+                    <button class="type-btn" data-type="phone">
+                        <i class="ph ph-phone"></i>
+                        <span>Phone</span>
+                    </button>
+                    <button class="type-btn" data-type="sms">
+                        <i class="ph ph-chat-text"></i>
+                        <span>SMS</span>
+                    </button>
+                    <button class="type-btn" data-type="wifi">
+                        <i class="ph ph-wifi-high"></i>
+                        <span>WiFi</span>
+                    </button>
+                </div>
+                
+                <div class="input-fields">
+                    <!-- URL Input -->
+                    <div class="input-group active" id="url-input">
+                        <label for="url">Website URL</label>
+                        <input type="url" id="url" placeholder="https://example.com">
+                    </div>
+                    
+                    <!-- Text/Note Input -->
+                    <div class="input-group" id="text-input">
+                        <label for="text">Text/Note</label>
+                        <textarea id="text" placeholder="Enter your note here"></textarea>
+                    </div>
+                    
+                    <!-- Bitcoin Input -->
+                    <div class="input-group" id="bitcoin-input">
+                        <label for="bitcoin">Bitcoin Wallet Address</label>
+                        <input type="text" id="bitcoin" placeholder="Bitcoin address">
+                    </div>
+                    
+                    <!-- Maps Input -->
+                    <div class="input-group" id="maps-input">
+                        <label for="location">Location (Address, City, etc.)</label>
+                        <input type="text" id="location" placeholder="Enter a location name to generate a Google Maps link">
+                        <button type="button" id="geocode-btn" style="margin-top: 0.5rem; cursor: pointer;">
+                            <i class="ph ph-map-pin"></i> Get Coordinates
+                        </button>
+                        <div style="margin-top: 0.5rem; font-size: 0.8rem; color: var(--gray);">Or enter coordinates manually:</div>
+                        <label for="latitude">Latitude</label>
+                        <input type="number" id="latitude" placeholder="Latitude (e.g. 40.7128)">
+                        <label for="longitude">Longitude</label>
+                        <input type="number" id="longitude" placeholder="Longitude (e.g. -74.0060)">
+                        <label for="location-name">Location Name (Optional)</label>
+                        <input type="text" id="location-name" placeholder="Location name">
+                    </div>
+                    
+                    <!-- Email Input -->
+                    <div class="input-group" id="email-input">
+                        <label for="email">Email Address</label>
+                        <input type="email" id="email" placeholder="example@email.com">
+                        <label for="email-subject">Subject (Optional)</label>
+                        <input type="text" id="email-subject" placeholder="Email subject">
+                        <label for="email-body">Body (Optional)</label>
+                        <textarea id="email-body" placeholder="Email body"></textarea>
+                    </div>
+                    
+                    <!-- vCard Input -->
+                    <div class="input-group" id="vcard-input">
+                        <label for="vcard-name">Full Name</label>
+                        <input type="text" id="vcard-name" placeholder="John Doe">
+                        <label for="vcard-phone">Phone Number</label>
+                        <input type="tel" id="vcard-phone" placeholder="+1234567890">
+                        <label for="vcard-email">Email</label>
+                        <input type="email" id="vcard-email" placeholder="john@example.com">
+                        <label for="vcard-org">Organization (Optional)</label>
+                        <input type="text" id="vcard-org" placeholder="Company Name">
+                    </div>
+                    
+                    <!-- WiFi Input -->
+                    <div class="input-group" id="wifi-input">
+                        <label for="wifi-ssid">Network Name (SSID)</label>
+                        <input type="text" id="wifi-ssid" placeholder="WiFi Network Name">
+                        <label for="wifi-password">Password</label>
+                        <input type="password" id="wifi-password" placeholder="WiFi Password">
+                        <div class="radio-group">
+                            <label>Security Type:</label>
+                            <div class="radio-options">
+                                <input type="radio" id="wifi-wpa" name="wifi-security" value="WPA" checked>
+                                <label for="wifi-wpa">WPA/WPA2</label>
+                                <input type="radio" id="wifi-wep" name="wifi-security" value="WEP">
+                                <label for="wifi-wep">WEP</label>
+                                <input type="radio" id="wifi-none" name="wifi-security" value="nopass">
+                                <label for="wifi-none">None</label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Phone Input -->
+                    <div class="input-group" id="phone-input">
+                        <label for="phone-number">Phone Number</label>
+                        <input type="tel" id="phone-number" placeholder="Enter phone number (e.g. +1234567890)">
+                    </div>
+                    
+                    <!-- SMS Input -->
+                    <div class="input-group" id="sms-input">
+                        <label for="sms-number">Phone Number</label>
+                        <input type="tel" id="sms-number" placeholder="Enter phone number (e.g. +1234567890)">
+                        <label for="sms-message">Message (Optional)</label>
+                        <textarea id="sms-message" placeholder="Enter your SMS message here"></textarea>
+                    </div>
+                </div>
+                
+                <div class="slider-control">
+                    <label for="size-slider">QR Code Size: <span id="size-value">500 x 500</span> px</label>
+                    <input type="range" id="size-slider" class="slider" min="200" max="1000" step="100" value="500">
+                </div>
+                
+                <div class="slider-control">
+                    <label for="stroke-slider">QR Code Stroke: <span id="stroke-value">0</span>%</label>
+                    <input type="range" id="stroke-slider" class="slider" min="0" max="13" step="1" value="0">
+                </div>
+
+                <div class="option-control" style="margin-top: 1rem;">
+                    <label class="toggle-label">
+                        <input type="checkbox" id="outline-toggle">
+                        <span style="margin-left: 0.5rem;">Add black outline</span>
+                    </label>
+                    <p style="margin-top: 0.5rem; font-size: 0.8rem; color: var(--gray);">Adds a thick black border around the QR code at a fixed distance from the edge</p>
+                </div>
+                
+                <div class="option-control" style="margin-top: 1rem;">
+                    <label class="toggle-label">
+                        <input type="checkbox" id="invert-toggle">
+                        <span style="margin-left: 0.5rem;">Invert colors</span>
+                    </label>
+                    <p style="margin-top: 0.5rem; font-size: 0.8rem; color: var(--gray);">Inverts the QR code colors (black on white background)</p>
+                </div>
+                
+                <button id="generate-btn">
+                    <i class="ph ph-qr-code"></i>
+                    Generate QR Code
+                </button>
+            </div>
+            
+            <div class="qr-result">
+                <div class="qr-preview">
+                    <div id="qr-code"></div>
+                </div>
+                
+                <div class="download-options">
+                    <div class="button-group">
+                        <button id="download-svg" class="download-btn" disabled>
+                            <i class="ph ph-file-svg"></i> Download SVG
+                        </button>
+                        <button id="download-png" class="download-btn" disabled>
+                            <i class="ph ph-image"></i> Download PNG
+                        </button>
+                    </div>
+                    <button id="share-qr" class="download-btn share-btn full-width" disabled>
+                        <i class="ph ph-share-network"></i> Share QR
+                    </button>
+                </div>
+            </div>
+        </main>
+        
+        <footer>
+            <p>© 2025 QKQR All rights reserved.</p>
+        </footer>
+    </div>
+    
+    <div id="notification"></div>
+
+    <script>
+        // Wait for page to fully load before initializing
+        window.onload = function() {
+            // Check if the device supports touch events
+            var isTouchDevice = ('ontouchstart' in window) || 
+                               (navigator.maxTouchPoints > 0) || 
+                               (navigator.msMaxTouchPoints > 0);
+            
+            if (isTouchDevice) {
+                document.body.classList.add('touch-device');
+                console.log("Touch device detected, enabling touch-specific features");
+            }
+            
+            // GLOBAL VARIABLES - Accessible throughout the script
+            var QR = {
+                data: '',
+                size: 500,
+                stroke: 0,
+                showOutline: false,
+                invertColors: false,
+                generated: false,
+                svg: null,
+                pngBlob: null,
+                pngUrl: null,  // Store URL for sharing
+                type: 'url',   // Store the current QR type, default to url
+                isTouchDevice: isTouchDevice
+            };
+            
+            // SETUP UI ELEMENTS
+            setupUI();
+            
+            function setupUI() {
+                // Initialize the QR.invertColors based on toggle state
+                var invertToggle = document.getElementById('invert-toggle');
+                QR.invertColors = invertToggle.checked;
+                console.log("Initial invert colors state:", QR.invertColors);
+                
+                // Tab switching
+                var tabs = document.querySelectorAll('.type-btn');
+                tabs.forEach(function(tab) {
+                    // Add event listeners for both click and touch
+                    tab.addEventListener('click', handleTabChange);
+                    tab.addEventListener('touchend', function(e) {
+                        e.preventDefault(); // Prevent default behavior
+                        handleTabChange.call(this); // Call the handler with correct context
+                    });
+                });
+                
+                // Tab change handler function (extracted to avoid code duplication)
+                function handleTabChange() {
+                    // Remove active class from all tabs
+                    tabs.forEach(function(t) { t.classList.remove('active'); });
+                    
+                    // Add active class to clicked tab
+                    this.classList.add('active');
+                    
+                    // Show corresponding input group
+                    var type = this.getAttribute('data-type');
+                    // Store the current type in the QR object
+                    QR.type = type;
+                    
+                    document.querySelectorAll('.input-group').forEach(function(group) {
+                        group.classList.remove('active');
+                    });
+                    document.getElementById(type + '-input').classList.add('active');
+                }
+                
+                // Geocode button for maps
+                var geocodeBtn = document.getElementById('geocode-btn');
+                geocodeBtn.addEventListener('click', handleGeocode);
+                geocodeBtn.addEventListener('touchend', function(e) {
+                    e.preventDefault();
+                    handleGeocode.call(this);
+                });
+                
+                function handleGeocode() {
+                    var location = document.getElementById('location').value.trim();
+                    if (!location) {
+                        showNotification("Please enter a location");
+                        return;
+                    }
+                    
+                    // Show that we're geocoding
+                    this.disabled = true;
+                    this.innerHTML = '<i class="ph ph-spinner ph-spin"></i> Finding...';
+                    showNotification("Finding coordinates...");
+                    
+                    // Direct to Google Maps URL without actual geocoding for simplicity
+                    // (No API key needed for this approach)
+                    document.getElementById('latitude').value = "";
+                    document.getElementById('longitude').value = "";
+                    document.getElementById('location-name').value = location;
+                    
+                    var self = this;
+                    setTimeout(function() {
+                        self.disabled = false;
+                        self.innerHTML = '<i class="ph ph-map-pin"></i> Get Coordinates';
+                        showNotification("Google Maps link will be created for: " + location);
+                    }, 1000);
+                }
+                
+                // Size slider
+                var sizeSlider = document.getElementById('size-slider');
+                ['input', 'touchmove'].forEach(function(eventType) {
+                    sizeSlider.addEventListener(eventType, function() {
+                        QR.size = parseInt(this.value);
+                        document.getElementById('size-value').textContent = QR.size + ' x ' + QR.size;
+                    });
+                });
+                
+                // Stroke slider
+                var strokeSlider = document.getElementById('stroke-slider');
+                ['input', 'touchmove'].forEach(function(eventType) {
+                    strokeSlider.addEventListener(eventType, function() {
+                        QR.stroke = parseInt(this.value);
+                        document.getElementById('stroke-value').textContent = QR.stroke;
+                        
+                        // Only apply stroke if QR is already generated
+                        if (QR.generated) {
+                            console.log("Stroke slider changed to: " + QR.stroke + "%");
+                            // Force immediate redraw
+                            setTimeout(function() {
+                                applyStrokeToQR();
+                            }, 0);
+                        }
+                    });
+                });
+                
+                // Outline toggle
+                var outlineToggle = document.getElementById('outline-toggle');
+                outlineToggle.addEventListener('change', handleOutlineToggle);
+                
+                function handleOutlineToggle() {
+                    QR.showOutline = this.checked;
+                    console.log("%c Outline toggle changed to: " + QR.showOutline, "background: #333; color: #ff0; font-size: 14px;");
+                    
+                    // Regenerate QR code for consistent behavior with invert toggle
+                    if (QR.generated) {
+                        console.log("Regenerating QR code with outline changes...");
+                        generateQR();
+                    }
+                }
+                
+                // Invert colors toggle
+                var invertToggle = document.getElementById('invert-toggle');
+                invertToggle.addEventListener('change', handleInvertToggle);
+                
+                function handleInvertToggle() {
+                    QR.invertColors = this.checked;
+                    console.log("%c Invert colors toggle changed to: " + QR.invertColors, "background: #333; color: #ff0; font-size: 14px;");
+                    console.log("QR object colors state:", QR.invertColors);
+                    
+                    // We need to regenerate the QR code completely when colors are inverted
+                    if (QR.generated) {
+                        console.log("Regenerating QR code with inverted colors...");
+                        generateQR();
+                    }
+                }
+                
+                // Generate button
+                var generateBtn = document.getElementById('generate-btn');
+                generateBtn.addEventListener('click', generateQR);
+                generateBtn.addEventListener('touchend', function(e) {
+                    e.preventDefault();
+                    generateQR();
+                });
+                
+                // Download buttons
+                var downloadSvgBtn = document.getElementById('download-svg');
+                downloadSvgBtn.addEventListener('click', downloadSVG);
+                downloadSvgBtn.addEventListener('touchend', function(e) {
+                    e.preventDefault();
+                    downloadSVG();
+                });
+                
+                var downloadPngBtn = document.getElementById('download-png');
+                downloadPngBtn.addEventListener('click', downloadPNG);
+                downloadPngBtn.addEventListener('touchend', function(e) {
+                    e.preventDefault();
+                    downloadPNG();
+                });
+                
+                // Share button
+                var shareBtn = document.getElementById('share-qr');
+                shareBtn.addEventListener('click', shareQRCode);
+                shareBtn.addEventListener('touchend', function(e) {
+                    e.preventDefault();
+                    shareQRCode();
+                });
+                
+                // Add touch feedback class for buttons
+                document.querySelectorAll('button').forEach(function(button) {
+                    button.addEventListener('touchstart', function() {
+                        this.classList.add('touch-active');
+                    });
+                    button.addEventListener('touchend', function() {
+                        this.classList.remove('touch-active');
+                    });
+                    button.addEventListener('touchcancel', function() {
+                        this.classList.remove('touch-active');
+                    });
+                });
+            }
+            
+            // GENERATE QR CODE
+            function generateQR() {
+                // Check which type is active
+                var activeTab = document.querySelector('.type-btn.active');
+                var type = activeTab.getAttribute('data-type');
+                
+                // Store the current type in the QR object
+                QR.type = type;
+                
+                // Get data based on type
+                var data = getQRData(type);
+                if (!data) {
+                    return;
+                }
+                
+                // Store data
+                QR.data = data;
+                
+                // Create QR code
+                var qrContainer = document.getElementById('qr-code');
+                qrContainer.innerHTML = '';
+                
+                // Reset blob and URL
+                if (QR.pngUrl) {
+                    URL.revokeObjectURL(QR.pngUrl);
+                    QR.pngUrl = null;
+                }
+                QR.pngBlob = null;
+                
+                try {
+                    // Create new QR code
+                    var qrcode = new QRCode(qrContainer, {
+                        text: data,
+                        width: 230,
+                        height: 230,
+                        colorDark: QR.invertColors ? "#000000" : "#FFFFFF",
+                        colorLight: QR.invertColors ? "#FFFFFF" : "#000000",
+                        correctLevel: QRCode.CorrectLevel.H
+                    });
+                    
+                    // Log the QR code creation with colors
+                    console.log("%c QR Code colors - Dark: " + (QR.invertColors ? "#000000" : "#FFFFFF") + 
+                               ", Light: " + (QR.invertColors ? "#FFFFFF" : "#000000"),
+                               "background: #333; color: #00ff00; font-size: 14px;");
+                    
+                    // Create a container for the QR code
+                    var qrCodeContainer = document.createElement('div');
+                    qrCodeContainer.id = 'qr-code-container';
+                    qrCodeContainer.style.backgroundColor = "transparent";
+                    qrCodeContainer.style.borderRadius = "0"; // Ensure no rounded corners for QR
+                    
+                    // Move the QR code image into the container
+                    var img = qrContainer.querySelector('img');
+                    if (img) {
+                        // Ensure QR image has no borders or radius
+                        img.style.border = "none";
+                        img.style.borderRadius = "0";
+                        img.style.display = "block"; // Ensure proper display
+                        
+                        qrContainer.removeChild(img);
+                        qrCodeContainer.appendChild(img);
+                        qrContainer.appendChild(qrCodeContainer);
+                    }
+                    
+                    // Apply any stroke and outline - use a slightly longer delay on mobile
+                    var isMobile = window.innerWidth <= 767;
+                    setTimeout(function() {
+                        applyStrokeToQR();
+                        
+                        // For mobile, add an extra repaint cycle
+                        if (isMobile) {
+                            setTimeout(function() {
+                                applyStrokeToQR(); // Apply again to ensure proper rendering
+                            }, 100);
+                        }
+                    }, isMobile ? 100 : 50);
+                    
+                    // Enable download buttons
+                    document.getElementById('download-svg').disabled = false;
+                    document.getElementById('download-png').disabled = false;
+                    document.getElementById('share-qr').disabled = false;
+                    
+                    // Mark as generated
+                    QR.generated = true;
+                    
+                    console.log("QR Code generated");
+                } catch (error) {
+                    console.error("QR generation error:", error);
+                    showNotification("Error: " + error.message);
+                }
+            }
+            
+            // APPLY STROKE TO QR PREVIEW
+            function applyStrokeToQR() {
+                // Get the container
+                var qrContainer = document.getElementById('qr-code-container');
+                if (!qrContainer) {
+                    console.error("QR container not found!");
+                    return;
+                }
+                
+                // Log the current stroke value
+                console.log("APPLYING STROKE: " + QR.stroke + "%, Outline: " + QR.showOutline + ", Inverted: " + QR.invertColors);
+                
+                // Get QR image for ensuring it has no border
+                var qrImg = qrContainer.querySelector('img');
+                if (qrImg) {
+                    qrImg.style.border = "none";
+                    qrImg.style.boxShadow = "none";
+                    qrImg.style.outline = "none";
+                    
+                    // Make sure the image itself is filtered correctly if needed
+                    // Note: This step is crucial for browsers that don't re-render the QR image
+                    if (QR.invertColors) {
+                        // Don't apply inversion filter - the QR is already generated with inverted colors
+                        qrImg.style.filter = "none";
+                        
+                        // Force browser to repaint the element
+                        qrImg.style.opacity = "0.99";
+                        setTimeout(function() {
+                            qrImg.style.opacity = "1";
+                        }, 10);
+                    } else {
+                        qrImg.style.filter = "none";
+                    }
+                    
+                    // For touch devices, explicitly prevent default behavior on QR image
+                    if (QR.isTouchDevice) {
+                        qrImg.addEventListener('touchstart', function(e) {
+                            e.preventDefault(); // Prevent any touch highlight or interactions
+                        });
+                    }
+                }
+                
+                // Get the QR div as a reference point
+                var qrDiv = document.getElementById('qr-code');
+                
+                // Special handling for touch devices
+                if (QR.isTouchDevice) {
+                    // Force all child elements to have no highlight
+                    qrDiv.querySelectorAll('*').forEach(function(el) {
+                        el.style.webkitTapHighlightColor = 'transparent';
+                    });
+                }
+                
+                // Clear any previous styling for consistent rendering
+                qrDiv.style.display = "flex";
+                qrDiv.style.alignItems = "center";
+                qrDiv.style.justifyContent = "center";
+                qrDiv.style.position = "relative";
+                qrDiv.style.width = "100%";
+                qrDiv.style.height = "100%";
+                qrDiv.style.overflow = "visible"; // Important: Allow stroke to extend outside if needed
+                
+                // Get parent QR preview div
+                var qrPreview = document.querySelector('.qr-preview');
+                // Ensure the QR preview has the proper styling to contain the QR with stroke
+                qrPreview.style.overflow = "visible";
+                qrPreview.style.padding = "0";
+                qrPreview.style.boxSizing = "border-box";
+                qrPreview.style.display = "flex";
+                qrPreview.style.alignItems = "center";
+                qrPreview.style.justifyContent = "center";
+                
+                // Get actual QR dimensions from the image
+                var qrSize = qrImg ? Math.max(qrImg.offsetWidth, qrImg.offsetHeight) : 230;
+                console.log("Actual QR size: " + qrSize + "px");
+                
+                // Calculate stroke width based on the actual size (not a fixed value)
+                var strokeWidth = Math.max(2, Math.floor(qrSize * (QR.stroke / 100)));
+                
+                console.log("Stroke width: " + strokeWidth + "px");
+                
+                // Apply styles to QR container
+                qrContainer.style.backgroundColor = QR.invertColors ? "white" : "black";
+                console.log("Setting QR container background to:", QR.invertColors ? "white" : "black");
+                qrContainer.style.boxSizing = "content-box";
+                qrContainer.style.padding = "0";
+                qrContainer.style.margin = "0";
+                qrContainer.style.width = qrSize + "px";
+                qrContainer.style.height = qrSize + "px";
+                qrContainer.style.position = "relative";
+                qrContainer.style.zIndex = "5"; // Ensure it's above background but below outline
+                qrContainer.style.borderRadius = "0"; // Ensure no rounded corners on the QR container
+                
+                // Force DOM refresh by temporarily changing layout
+                qrContainer.style.display = "none";
+                setTimeout(function() {
+                    qrContainer.style.display = "block";
+                }, 5);
+                
+                // Remove any existing stroke to start fresh
+                qrContainer.style.border = "none";
+                
+                // Apply stroke if needed - ensure visibility on mobile
+                if (QR.stroke > 0) {
+                    // When inverted, use black stroke, otherwise white
+                    var strokeColor = QR.invertColors ? "#000000" : "#FFFFFF";
+                    console.log("Setting stroke color to:", strokeColor);
+                    qrContainer.style.border = strokeWidth + "px solid " + strokeColor;
+                    
+                    // Force repaint on mobile - this helps with rendering issues
+                    qrContainer.style.display = "inline-block";
+                    setTimeout(function() {
+                        qrContainer.style.display = "block";
+                    }, 5);
+                }
+                
+                // Remove any existing outline element
+                var existingOutline = document.getElementById("qr-outline");
+                if (existingOutline) {
+                    existingOutline.remove();
+                }
+                
+                // Apply outline if enabled - must match exactly how it's drawn in the download functions
+                if (QR.showOutline) {
+                    // Clean previous parent styling
+                    qrDiv.style.overflow = "visible";
+                    
+                    // Create a div element with a border to match download functions
+                    var outlineElement = document.createElement("div");
+                    outlineElement.id = "qr-outline";
+                    
+                    // Position the outline directly on the QR code, not outside the stroke
+                    outlineElement.style.position = "absolute";
+                    outlineElement.style.left = "50%";
+                    outlineElement.style.top = "50%";
+                    outlineElement.style.width = qrSize + "px"; 
+                    outlineElement.style.height = qrSize + "px";
+                    outlineElement.style.transform = "translate(-50%, -50%)";
+                    
+                    // Use thickness that matches the download version
+                    var outlineColor = QR.invertColors ? "#FFFFFF" : "#000000";
+                    console.log("Setting outline color to:", outlineColor);
+                    outlineElement.style.border = "4px solid " + outlineColor;
+                    outlineElement.style.boxSizing = "border-box";
+                    outlineElement.style.pointerEvents = "none";
+                    outlineElement.style.backgroundColor = "transparent";
+                    outlineElement.style.borderRadius = "0"; // No rounded corners on outline
+                    
+                    // Ensure the outline is at the correct z-index
+                    outlineElement.style.zIndex = "10"; // Make the outline appear on top
+                    
+                    // Add the outline to the QR div
+                    qrDiv.appendChild(outlineElement);
+                }
+                
+                console.log("Applied styles - Stroke:", QR.stroke, "Outline:", QR.showOutline);
+            }
+            
+            // GET QR DATA BASED ON TYPE
+            function getQRData(type) {
+                var data = '';
+                
+                switch(type) {
+                    case 'url':
+                        var url = document.getElementById('url').value.trim();
+                        if (!url) {
+                            showNotification("Please enter a URL");
+                            return null;
+                        }
+                        
+                        // Add https:// if missing
+                        if (!url.startsWith('http://') && !url.startsWith('https://')) {
+                            url = 'https://' + url;
+                        }
+                        data = url;
+                        break;
+                        
+                    case 'text':
+                        var text = document.getElementById('text').value.trim();
+                        if (!text) {
+                            showNotification("Please enter some text");
+                            return null;
+                        }
+                        data = text;
+                        break;
+                        
+                    case 'bitcoin':
+                        var address = document.getElementById('bitcoin').value.trim();
+                        if (!address) {
+                            showNotification("Please enter a Bitcoin address");
+                            return null;
+                        }
+                        data = 'bitcoin:' + address;
+                        break;
+                        
+                    case 'maps':
+                        var lat = document.getElementById('latitude').value.trim();
+                        var lng = document.getElementById('longitude').value.trim();
+                        var locationName = document.getElementById('location-name').value.trim();
+                        var location = document.getElementById('location').value.trim();
+                        
+                        // If we have a location name but no coordinates, create a Google Maps search link
+                        if (location && (!lat || !lng)) {
+                            // Create a search URL for Google Maps
+                            data = 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(location);
+                        } else if (lat && lng) {
+                            // Traditional coordinates link
+                            data = 'https://maps.google.com/maps?q=' + lat + ',' + lng;
+                            // Add location name as a label if available
+                            if (locationName) {
+                                data += '&q=' + encodeURIComponent(locationName);
+                            }
+                        } else {
+                            showNotification("Please enter either a location name or coordinates");
+                            return null;
+                        }
+                        break;
+                        
+                    case 'email':
+                        var email = document.getElementById('email').value.trim();
+                        if (!email) {
+                            showNotification("Please enter an email address");
+                            return null;
+                        }
+                        data = 'mailto:' + email;
+                        break;
+                        
+                    case 'vcard':
+                        var name = document.getElementById('vcard-name').value.trim();
+                        var phone = document.getElementById('vcard-phone').value.trim();
+                        var email = document.getElementById('vcard-email').value.trim();
+                        
+                        if (!name || !phone || !email) {
+                            showNotification("Please fill in all vCard required fields");
+                            return null;
+                        }
+                        
+                        data = 'BEGIN:VCARD\nVERSION:3.0\n';
+                        data += 'FN:' + name + '\n';
+                        data += 'TEL:' + phone + '\n';
+                        data += 'EMAIL:' + email + '\n';
+                        data += 'END:VCARD';
+                        break;
+                        
+                    case 'phone':
+                        var phone = document.getElementById('phone-number').value.trim();
+                        if (!phone) {
+                            showNotification("Please enter a phone number");
+                            return null;
+                        }
+                        data = 'tel:' + phone;
+                        break;
+                        
+                    case 'sms':
+                        var phone = document.getElementById('sms-number').value.trim();
+                        var message = document.getElementById('sms-message').value.trim();
+                        
+                        if (!phone) {
+                            showNotification("Please enter a phone number");
+                            return null;
+                        }
+                        
+                        data = 'SMSTO:' + phone;
+                        if (message) {
+                            data += ':' + message;
+                        }
+                        break;
+                        
+                    case 'wifi':
+                        var ssid = document.getElementById('wifi-ssid').value.trim();
+                        var password = document.getElementById('wifi-password').value;
+                        var security = document.querySelector('input[name="wifi-security"]:checked').value;
+                        
+                        if (!ssid) {
+                            showNotification("Please enter WiFi network name");
+                            return null;
+                        }
+                        
+                        data = 'WIFI:S:' + ssid + ';';
+                        if (security !== 'nopass') {
+                            data += 'T:' + security + ';P:' + password + ';';
+                        } else {
+                            data += 'T:nopass;';
+                        }
+                        data += ';';
+                        break;
+                }
+                
+                return data;
+            }
+            
+            // DOWNLOAD SVG
+            function downloadSVG() {
+                if (!QR.generated) {
+                    showNotification("Please generate a QR code first");
+                    return;
+                }
+                
+                try {
+                    console.log("--------- SVG DOWNLOAD STARTED ---------");
+                    console.log("OUTLINE ENABLED: " + QR.showOutline + " (Type: " + typeof QR.showOutline + ")");
+                    
+                    // Calculate dimensions
+                    var qrSize = QR.size; // The QR code size for download
+                    
+                    // Calculate stroke width
+                    var strokeWidth = 0;
+                    if (QR.stroke > 0) {
+                        strokeWidth = Math.max(1, Math.floor(qrSize * (QR.stroke / 100)));
+                        console.log("Stroke width calculated: " + strokeWidth + "px");
+                    }
+                    
+                    // Calculate outline parameters ONLY if outline is explicitly enabled
+                    var outlineOffset = 0;
+                    var outlineThickness = 0;
+                    
+                    if (QR.showOutline === true) {
+                        // Match the thicker outline in PNG
+                        outlineOffset = 0; // No offset for outline, it goes directly around QR
+                        outlineThickness = 12; // Much thicker outline to match PNG
+                        console.log("Outline will be drawn with VERY THICK outline: " + outlineThickness + "px");
+                    } else {
+                        console.log("NO OUTLINE will be drawn - outline is disabled");
+                    }
+                    
+                    // Calculate total dimensions needed
+                    var totalSize = qrSize;
+                    if (QR.stroke > 0) {
+                        totalSize += (strokeWidth * 2);
+                    }
+                    
+                    // Calculate center position
+                    var centerX = totalSize / 2;
+                    var centerY = totalSize / 2;
+                    
+                    // Create an SVG string with a background rectangle
+                    var backgroundColor = QR.invertColors ? "#FFFFFF" : "#000000";
+                    var svgString = '<svg xmlns="http://www.w3.org/2000/svg" width="' + totalSize + '" height="' + totalSize + '" viewBox="0 0 ' + totalSize + ' ' + totalSize + '">';
+                    svgString += '<rect width="' + totalSize + '" height="' + totalSize + '" fill="' + backgroundColor + '"/>';
+                    
+                    // Generate true vector QR code using QRCode-SVG library
+                    var qrSettings = {
+                        content: QR.data,
+                        width: qrSize,
+                        height: qrSize,
+                        color: QR.invertColors ? "#000000" : "#FFFFFF",
+                        background: QR.invertColors ? "#FFFFFF" : "#000000",
+                        ecl: "H",   // Error correction level (H = highest)
+                        join: true, // Join paths to reduce file size
+                        container: "svg"
+                    };
+                    
+                    // Use QRCodeSVG instead of QRCode for the SVG generator
+                    var qrSvg = new QRCodeSVG(qrSettings).svg();
+                    
+                    // Extract just the path data from the SVG
+                    var pathMatch = qrSvg.match(/<path[^>]*d="([^"]*)"[^>]*>/);
+                    var qrPath = pathMatch ? pathMatch[1] : null;
+                    
+                    if (qrPath) {
+                        // Add elements in the same order as the PNG version to match preview:
+                        
+                        // FIRST, add stroke if needed (outermost element)
+                        if (QR.stroke > 0) {
+                            var totalQRWithStrokeWidth = qrSize + (strokeWidth * 2);
+                            var strokeX = centerX - totalQRWithStrokeWidth/2;
+                            var strokeY = centerY - totalQRWithStrokeWidth/2;
+                            
+                            // When inverted, use black stroke, otherwise white
+                            var strokeColor = QR.invertColors ? "#000000" : "#FFFFFF";
+                            svgString += '<rect x="' + strokeX + '" y="' + strokeY + '" width="' + totalQRWithStrokeWidth + '" height="' + totalQRWithStrokeWidth + '" stroke="' + strokeColor + '" stroke-width="' + strokeWidth + '" fill="none"/>';
+                        }
+                        
+                        // Position for the QR code
+                        var qrX = centerX - qrSize/2;
+                        var qrY = centerY - qrSize/2;
+                        
+                        // SECOND, add outline if enabled directly around the QR code itself
+                        if (QR.showOutline === true) {
+                            // When inverted, use white outline, otherwise black
+                            var outlineColor = QR.invertColors ? "#FFFFFF" : "#000000";
+                            svgString += '<rect x="' + qrX + '" y="' + qrY + '" width="' + qrSize + '" height="' + qrSize + '" stroke="' + outlineColor + '" stroke-width="' + outlineThickness + '" fill="none"/>';
+                        }
+                        
+                        // THIRD, add the QR path in the center
+                        svgString += '<g transform="translate(' + qrX + ',' + qrY + ')">';
+                        // When inverted, use black QR code, otherwise white
+                        var qrColor = QR.invertColors ? "#000000" : "#FFFFFF";
+                        svgString += '<path d="' + qrPath + '" fill="' + qrColor + '"/>';
+                        svgString += '</g>';
+                        
+                        // Close the SVG
+                        svgString += '</svg>';
+                        
+                        // Create download link
+                        var downloadLink = document.createElement('a');
+                        downloadLink.download = 'qkqr-' + QR.type + '.svg';
+                        
+                        // Create blob from SVG string
+                        var blob = new Blob([svgString], {type: 'image/svg+xml'});
+                        
+                        // Create URL from blob
+                        var url = URL.createObjectURL(blob);
+                        
+                        // Set link href
+                        downloadLink.href = url;
+                        
+                        // Append link to document, click it, then remove it
+                        document.body.appendChild(downloadLink);
+                        downloadLink.click();
+                        document.body.removeChild(downloadLink);
+                        
+                        // Clean up
+                        URL.revokeObjectURL(url);
+                        
+                        console.log("SVG download complete!");
+                        showNotification("SVG Downloaded Successfully");
+                    } else {
+                        throw new Error("Failed to extract QR code paths");
+                    }
+                } catch (error) {
+                    console.error("SVG download error:", error);
+                    showNotification("Error: " + error.message);
+                    
+                    // Fallback to the old method if the new one fails
+                    downloadSVGFallback();
+                }
+            }
+            
+            // Update the SVG fallback function to match
+            function downloadSVGFallback() {
+                try {
+                    console.log("Using fallback SVG download...");
+                    
+                    // Get the QR code image
+                    var qrContainer = document.getElementById('qr-code-container');
+                    var img = qrContainer.querySelector('img');
+                    
+                    if (!img) {
+                        showNotification("Error: QR code not found");
+                        return;
+                    }
+                    
+                    // Create an SVG element from scratch based on the QR image
+                    var svgNS = "http://www.w3.org/2000/svg";
+                    var svg = document.createElementNS(svgNS, "svg");
+                    
+                    // Calculate dimensions
+                    var qrSize = QR.size; // The QR code size for download
+                    
+                    // Calculate stroke width
+                    var strokeWidth = 0;
+                    if (QR.stroke > 0) {
+                        strokeWidth = Math.max(1, Math.floor(qrSize * (QR.stroke / 100)));
+                    }
+                    
+                    // Calculate outline parameters
+                    var outlineThickness = 0;
+                    
+                    if (QR.showOutline === true) {
+                        outlineThickness = 12; // Much thicker outline to match PNG
+                    }
+                    
+                    // Calculate total dimensions needed
+                    var totalSize = qrSize;
+                    if (QR.stroke > 0) {
+                        totalSize += (strokeWidth * 2);
+                    }
+                    
+                    svg.setAttribute("width", totalSize);
+                    svg.setAttribute("height", totalSize);
+                    svg.setAttribute("viewBox", "0 0 " + totalSize + " " + totalSize);
+                    
+                    // Create a black background rect
+                    var rect = document.createElementNS(svgNS, "rect");
+                    rect.setAttribute("width", totalSize);
+                    rect.setAttribute("height", totalSize);
+                    rect.setAttribute("fill", QR.invertColors ? "#FFFFFF" : "#000000");
+                    svg.appendChild(rect);
+                    
+                    // Calculate center position of the entire SVG
+                    var centerX = totalSize / 2;
+                    var centerY = totalSize / 2;
+                    
+                    // Add elements in the same order as the main download function:
+                    
+                    // 1. Draw the stroke first if needed (outermost element)
+                    if (QR.stroke > 0) {
+                        var strokeRect = qrSize + (strokeWidth * 2);
+                        
+                        strokeRect.setAttribute("x", centerX - strokeRect/2);
+                        strokeRect.setAttribute("y", centerY - strokeRect/2);
+                        strokeRect.setAttribute("width", strokeRect);
+                        strokeRect.setAttribute("height", strokeRect);
+                        strokeRect.setAttribute("stroke", "#FFFFFF");
+                        strokeRect.setAttribute("stroke-width", strokeWidth);
+                        strokeRect.setAttribute("fill", "none");
+                        svg.appendChild(strokeRect);
+                    }
+                    
+                    // 2. Draw the outline if enabled directly around the QR code
+                    if (QR.showOutline === true) {
+                        var outlineRect = document.createElementNS(svgNS, "rect");
+                        
+                        outlineRect.setAttribute("x", centerX - qrSize/2);
+                        outlineRect.setAttribute("y", centerY - qrSize/2);
+                        outlineRect.setAttribute("width", qrSize);
+                        outlineRect.setAttribute("height", qrSize);
+                        outlineRect.setAttribute("stroke", "#000000");
+                        outlineRect.setAttribute("stroke-width", outlineThickness);
+                        outlineRect.setAttribute("fill", "none");
+                        svg.appendChild(outlineRect);
+                    }
+                    
+                    // 3. Draw the QR code image (centered)
+                    var svgImage = document.createElementNS(svgNS, "image");
+                    svgImage.setAttribute("width", qrSize);
+                    svgImage.setAttribute("height", qrSize);
+                    svgImage.setAttribute("x", centerX - qrSize/2);
+                    svgImage.setAttribute("y", centerY - qrSize/2);
+                    svgImage.setAttribute("href", img.src);
+                    svg.appendChild(svgImage);
+                    
+                    // Get SVG as a string
+                    var svgString = new XMLSerializer().serializeToString(svg);
+                    
+                    // Create download link
+                    var downloadLink = document.createElement('a');
+                    downloadLink.download = 'qkqr-' + QR.type + '.svg';
+                    
+                    // Create blob from SVG string
+                    var blob = new Blob([svgString], {type: 'image/svg+xml'});
+                    
+                    // Create URL from blob
+                    var url = URL.createObjectURL(blob);
+                    
+                    // Set link href
+                    downloadLink.href = url;
+                    
+                    // Append link to document, click it, then remove it
+                    document.body.appendChild(downloadLink);
+                    downloadLink.click();
+                    document.body.removeChild(downloadLink);
+                    
+                    // Clean up
+                    URL.revokeObjectURL(url);
+                    
+                    console.log("Fallback SVG download complete!");
+                    showNotification("SVG Downloaded Successfully");
+                } catch (error) {
+                    console.error("Fallback SVG download error:", error);
+                    showNotification("Error: " + error.message);
+                }
+            }
+            
+            // DOWNLOAD PNG - Make the outline thicker
+            function downloadPNG() {
+                if (!QR.generated) {
+                    showNotification("Please generate a QR code first");
+                    return;
+                }
+                
+                try {
+                    // DEBUGGING
+                    console.log("--------- PNG DOWNLOAD STARTED ---------");
+                    console.log("OUTLINE ENABLED: " + QR.showOutline + " (Type: " + typeof QR.showOutline + ")");
+                    console.log("Stroke: " + QR.stroke + "%");
+                    console.log("Inverted: " + QR.invertColors + " (Type: " + typeof QR.invertColors + ")");
+                    console.log("Fill color will be: " + (QR.invertColors ? "#FFFFFF" : "#000000"));
+                    
+                    // Get the QR code image
+                    var qrContainer = document.getElementById('qr-code-container');
+                    var img = qrContainer.querySelector('img');
+                    
+                    if (!img) {
+                        showNotification("Error: QR code not found");
+                        return;
+                    }
+                    
+                    // Calculate dimensions
+                    var qrSize = QR.size; // The QR code size for download
+                    
+                    // Calculate stroke width (white border thickness)
+                    var strokeWidth = 0;
+                    if (QR.stroke > 0) {
+                        strokeWidth = Math.max(1, Math.floor(qrSize * (QR.stroke / 100)));
+                        console.log("Stroke width calculated: " + strokeWidth + "px");
+                    }
+                    
+                    // Calculate outline parameters ONLY if outline is explicitly enabled
+                    var outlineOffset = 0;
+                    var outlineThickness = 0;
+                    
+                    if (QR.showOutline === true) {
+                        // Use even thicker outline for downloaded PNGs - increase from 8px to 12px
+                        outlineThickness = 12; // Much thicker outline for downloads
+                        console.log("Outline will be drawn with VERY THICK outline: " + outlineThickness + "px");
+                    } else {
+                        console.log("NO OUTLINE will be drawn - outline is disabled");
+                    }
+                    
+                    // Calculate total dimensions needed
+                    var totalSize = qrSize;
+                    
+                    // Add space for stroke if needed
+                    if (QR.stroke > 0) {
+                        totalSize += (strokeWidth * 2);
+                    }
+                    
+                    console.log("Canvas size will be: " + totalSize + "px");
+                    
+                    // Create a canvas element for rendering
+                    var canvas = document.createElement('canvas');
+                    canvas.width = totalSize;
+                    canvas.height = totalSize;
+                    
+                    // Get 2D context
+                    var ctx = canvas.getContext('2d');
+                    
+                    // Fill with background color based on invert setting
+                    ctx.fillStyle = QR.invertColors ? '#FFFFFF' : '#000000';
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+                    
+                    // Calculate center position
+                    var centerX = totalSize / 2;
+                    var centerY = totalSize / 2;
+                    
+                    // Create a new image for drawing to canvas
+                    var qrImage = new Image();
+                    
+                    // When image is loaded, draw to canvas and download
+                    qrImage.onload = function() {
+                        // Change the drawing order to match the preview
+                        
+                        // FIRST, draw stroke if needed (outermost element)
+                        if (QR.stroke > 0) {
+                            var strokeRect = qrSize + (strokeWidth * 2); 
+                            
+                            // Use black stroke when inverted, white otherwise
+                            ctx.strokeStyle = QR.invertColors ? '#000000' : '#FFFFFF';
+                            ctx.lineWidth = strokeWidth;
+                            ctx.strokeRect(
+                                centerX - strokeRect/2 + (strokeWidth / 2), 
+                                centerY - strokeRect/2 + (strokeWidth / 2), 
+                                strokeRect - strokeWidth, 
+                                strokeRect - strokeWidth
+                            );
+                        }
+                        
+                        // SECOND, if outline is enabled, draw outline directly around the QR code
+                        if (QR.showOutline === true) {
+                            console.log("Drawing VERY THICK outline on PNG");
+                            // Size of just the QR code
+                            var outlineWidth = qrSize;
+                            var outlineHeight = qrSize;
+                            
+                            // Draw the outline with much thicker line, white when inverted, black otherwise
+                            ctx.strokeStyle = QR.invertColors ? '#FFFFFF' : '#000000';
+                            ctx.lineWidth = outlineThickness;
+                            
+                            // Center the outline directly around the QR code
+                            ctx.strokeRect(
+                                centerX - qrSize/2, 
+                                centerY - qrSize/2, 
+                                qrSize, 
+                                qrSize
+                            );
+                        }
+                        
+                        // THIRD, draw the QR code centered
+                        ctx.drawImage(
+                            qrImage, 
+                            centerX - qrSize/2, 
+                            centerY - qrSize/2, 
+                            qrSize, 
+                            qrSize
+                        );
+                        
+                        // Convert canvas to blob and create download
+                        canvas.toBlob(function(blob) {
+                            // Store the blob for potential future sharing
+                            QR.pngBlob = blob;
+                            
+                            // Create download link
+                            var downloadLink = document.createElement('a');
+                            downloadLink.download = 'qkqr-' + QR.type + '.png';
+                            
+                            // Create URL from blob
+                            var url = URL.createObjectURL(blob);
+                            
+                            // Store the URL for sharing
+                            QR.pngUrl = url;
+                            
+                            // Set link href
+                            downloadLink.href = url;
+                            
+                            // Trigger download
+                            document.body.appendChild(downloadLink);
+                            downloadLink.click();
+                            document.body.removeChild(downloadLink);
+                            
+                            console.log("PNG download complete!");
+                            showNotification("PNG Downloaded Successfully");
+                        }, 'image/png');
+                    };
+                    
+                    // Set image source and start the loading process
+                    qrImage.src = img.src;
+                    
+                } catch (error) {
+                    console.error("PNG download error:", error);
+                    showNotification("Error: " + error.message);
+                }
+            }
+            
+            // SHARE QR CODE
+            function shareQRCode() {
+                if (!QR.generated) {
+                    showNotification("Please generate a QR code first");
+                    return;
+                }
+                
+                // Check if Web Share API is supported
+                if (!navigator.share) {
+                    showNotification("Sharing not supported on this browser");
+                    // Fallback to download if sharing is not supported
+                    downloadPNG();
+                    return;
+                }
+                
+                try {
+                    console.log("--------- SHARE STARTED ---------");
+                    console.log("OUTLINE ENABLED: " + QR.showOutline + " (Type: " + typeof QR.showOutline + ")");
+                    
+                    // If we already have a PNG blob from a previous download, use it
+                    if (QR.pngBlob) {
+                        shareExistingQR();
+                        return;
+                    }
+                    
+                    // Otherwise, create a new PNG to share using the same approach as downloadPNG
+                    // This ensures consistency across all outputs
+                    var qrContainer = document.getElementById('qr-code-container');
+                    var img = qrContainer.querySelector('img');
+                    
+                    if (!img) {
+                        showNotification("Error: QR code not found");
+                        return;
+                    }
+                    
+                    // Calculate dimensions
+                    var qrSize = QR.size;
+                    
+                    // Calculate stroke width
+                    var strokeWidth = 0;
+                    if (QR.stroke > 0) {
+                        strokeWidth = Math.max(1, Math.floor(qrSize * (QR.stroke / 100)));
+                    }
+                    
+                    // Calculate outline parameters ONLY if outline is explicitly enabled
+                    var outlineThickness = 0;
+                    
+                    if (QR.showOutline === true) {
+                        outlineThickness = 12; // Much thicker outline to match PNG download
+                    }
+                    
+                    // Calculate total dimensions needed
+                    var totalSize = qrSize;
+                    if (QR.stroke > 0) totalSize += (strokeWidth * 2);
+                    
+                    // Create a canvas element for rendering
+                    var canvas = document.createElement('canvas');
+                    canvas.width = totalSize;
+                    canvas.height = totalSize;
+                    
+                    // Get 2D context
+                    var ctx = canvas.getContext('2d');
+                    
+                    // Fill with background color based on invert setting
+                    ctx.fillStyle = QR.invertColors ? '#FFFFFF' : '#000000';
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+                    
+                    // Calculate center position
+                    var centerX = totalSize / 2;
+                    var centerY = totalSize / 2;
+                    
+                    // Create a new image for drawing to canvas
+                    var qrImage = new Image();
+                    
+                    // When image is loaded, draw to canvas and share
+                    qrImage.onload = function() {
+                        // Draw in the same order as the PNG download function
+                        
+                        // FIRST, draw stroke if needed (outermost element)
+                        if (QR.stroke > 0) {
+                            var strokeRect = qrSize + (strokeWidth * 2); 
+                            
+                            // Use black stroke when inverted, white otherwise
+                            ctx.strokeStyle = QR.invertColors ? '#000000' : '#FFFFFF';
+                            ctx.lineWidth = strokeWidth;
+                            ctx.strokeRect(
+                                centerX - strokeRect/2 + (strokeWidth / 2), 
+                                centerY - strokeRect/2 + (strokeWidth / 2), 
+                                strokeRect - strokeWidth, 
+                                strokeRect - strokeWidth
+                            );
+                        }
+                        
+                        // SECOND, if outline is enabled, draw outline directly around the QR code
+                        if (QR.showOutline === true) {
+                            // Draw the outline with much thicker line, white when inverted, black otherwise
+                            ctx.strokeStyle = QR.invertColors ? '#FFFFFF' : '#000000';
+                            ctx.lineWidth = outlineThickness;
+                            
+                            // Center the outline directly around the QR code
+                            ctx.strokeRect(
+                                centerX - qrSize/2, 
+                                centerY - qrSize/2, 
+                                qrSize, 
+                                qrSize
+                            );
+                        }
+                        
+                        // THIRD, draw the QR code centered
+                        ctx.drawImage(
+                            qrImage, 
+                            centerX - qrSize/2, 
+                            centerY - qrSize/2, 
+                            qrSize, 
+                            qrSize
+                        );
+                        
+                        // Get a blob from the canvas
+                        canvas.toBlob(function(blob) {
+                            // Store the blob for future sharing
+                            QR.pngBlob = blob;
+                            
+                            // Create a shareable File object
+                            var file = new File([blob], "qkqr-" + QR.type + ".png", { type: "image/png" });
+                            
+                            // Share the file
+                            navigator.share({
+                                title: 'QR Code from QKQR',
+                                text: 'Check out this QR code I generated with QKQR!',
+                                files: [file]
+                            }).then(() => {
+                                console.log('QR code shared successfully!');
+                                showNotification("QR Code shared successfully!");
+                            }).catch((error) => {
+                                console.error('Share error:', error);
+                                showNotification("Error sharing: " + error.message);
+                                
+                                // If sharing files fails, try fallback without files
+                                if (error.name === 'NotAllowedError' || error.name === 'TypeError') {
+                                    navigator.share({
+                                        title: 'QR Code from QKQR',
+                                        text: 'Check out this QR code I generated with QKQR!',
+                                        url: window.location.href
+                                    }).catch((err) => {
+                                        console.error('Fallback share error:', err);
+                                        showNotification("Sharing not supported on this device");
+                                    });
+                                }
+                            });
+                        }, 'image/png');
+                    };
+                    
+                    // Set image source
+                    qrImage.src = img.src;
+                } catch (error) {
+                    console.error("Share error:", error);
+                    showNotification("Error: " + error.message);
+                }
+            }
+
+            function shareExistingQR() {
+                try {
+                    // Create a shareable File object from the existing blob
+                    var file = new File([QR.pngBlob], "qkqr-" + QR.type + ".png", { type: "image/png" });
+                    
+                    // Share the file
+                    navigator.share({
+                        title: 'QR Code from QKQR',
+                        text: 'Check out this QR code I generated with QKQR!',
+                        files: [file]
+                    }).then(() => {
+                        console.log('QR code shared successfully!');
+                        showNotification("QR Code shared successfully!");
+                    }).catch((error) => {
+                        console.error('Share error:', error);
+                        showNotification("Error sharing: " + error.message);
+                        
+                        // If sharing files specifically fails, try without files (fallback)
+                        if (error.name === 'NotAllowedError' || error.name === 'TypeError') {
+                            navigator.share({
+                                title: 'QR Code from QKQR',
+                                text: 'Check out this QR code I generated with QKQR!',
+                                url: window.location.href
+                            }).catch((err) => {
+                                console.error('Fallback share error:', err);
+                                showNotification("Sharing not supported on this device");
+                            });
+                        }
+                    });
+                } catch (error) {
+                    console.error("Share existing QR error:", error);
+                    showNotification("Error: " + error.message);
+                }
+            }
+            
+            // SHOW NOTIFICATION
+            function showNotification(message) {
+                var notification = document.getElementById('notification');
+                notification.textContent = message;
+                notification.style.display = 'block';
+                
+                // Hide after 3 seconds
+                setTimeout(function() {
+                    notification.style.display = 'none';
+                }, 3000);
+            }
+        };
+    </script>
+</body>
+</html>
